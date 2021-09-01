@@ -1,0 +1,32 @@
+{
+  "name": "human-canceling_map",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "devStart": "nodemon server.js",
+    "start": "node server.js",
+    "build": "webpack build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.7",
+    "webpack": "^5.40.0",
+    "webpack-cli": "^4.7.2"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.2.1",
+    "fs": "^0.0.1-security",
+    "mapbox-gl-compare": "^0.4.0",
+    "multer": "^1.4.2",
+    "osc": "^2.4.1",
+    "pg": "^8.5.1",
+    "socket.io": "^4.1.2",
+    "socket.io-client": "^4.1.2"
+  }
+}

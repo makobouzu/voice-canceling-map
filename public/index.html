@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Human-canceling Map</title>
+    <meta name="description" content="'Human-canceling Map'は情報科学芸術大学院大学メディア表現研究科修士2年の天野真が制作した作品である。">
+    <!-- <link rel="icon" href="img/favicon.ico"> -->
+
+    <meta property="og:title" content="Human-canceling Map">
+    <meta property="og:type" content="website">
+    <!-- <meta property="og:description" content="'Noise selection/rejection filter'は情報科学芸術大学院大学メディア表現研究科修士2年の天野真が制作した作品である。"> -->
+    <!-- <meta property="og:url" content="https://noise-selection-rejection-filter.jp.ngrok.io"> -->
+    <!-- <meta property="og:site_name" content="Noise selection/rejection filter"> -->
+    <!-- <meta property="og:image" content="img/thumbnail.png"> -->
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js" defer></script>
+
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.js' defer></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.5.1/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.5.1/mapbox-gl-geocoder.css" type="text/css" />
+    
+    <script src="index.js" defer></script>
+    <script src="bundle.js" defer></script>
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.6.3/js/all.js"></script>
+  
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        #video-modal-button, #text-modal-button { display: none; }
+        #marker-video { position: absolute; z-index: 15; width: 100%; }
+        #marker-num, #change-marker, #osc-path, #change-osc { display: none; }
+        #contents { position: fixed; z-index: 1; top: 10px; left: 10px; border: 1.5px solid rgba(0,0,0,0.1); border-radius: 7px;}
+        #upload { padding: .7rem .75rem; }
+
+        .modal-header { padding: 1rem 1rem 1rem 1rem;}
+        .modal-body { padding: 1rem 1rem 0rem 1rem;}
+        .modal-footer { display: block;}
+        .progress-bar { background-color: #222529;}
+        #complete { margin: 5px 0px 0px 3px; font-size: 13px; display: none;}
+        #file-upload { margin: 12px .25rem 0 0; float: right;}
+    </style>
+</head>
+
+<body>
+    <div id='map'></div>
+
+    <!-- OSC send value -->
+    <p id="marker-num">0</p>
+    <button id="change-marker"></button>
+    <p id="osc-path"></p>
+    <button id="change-osc"></button>
+
+    <div id='contents'>
+        <button type="button" class="btn btn-light" id="upload" data-toggle="modal" data-target="#uploadModal"><i class="fas fa-cloud-upload-alt"></i></button>
+    </div>
+
+    <!-- Video modal -->
+    <button type="button" id="video-modal-button" class="btn btn-primary" data-toggle="modal" data-target=".videomodal"></button>
+    <div class="modal fade videomodal" id="modal" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div id="videos">
+                    <video id="marker-video" controls autoplay loop playsinline></video>
+                    <!-- <iframe id="marker-video" height="450" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe> -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="infoModalLabel">【 File Upload Form 】</h5>
+                    <button type="button" class="close" id="x_close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <input type="file" class="form-control-file" id="file-input" name="inputFile" accept=".mp4, .mov">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <div class="progress">
+                        <div id="progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                    </div>
+                    <p class="fw-bold" id="complete">Upload Complete!!</p>
+                    <button type="button" id="file-upload" class="btn btn-secondary" data-dismiss="modal" onclick="fileUploader()">Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intro text -->
+    <button type="button" id="text-modal-button" class="btn btn-primary" data-toggle="modal" data-target=".textmodal"></button>
+    <div class="modal fade textmodal" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    </br>
+                    <h5 class="modal-title" id="modalTitle">
+                        <strong>《 Human-canceling Map 》</strong>
+                    </h5>
+                    </br>
+                </div>
+                <div class="modal-body">
+                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="exit-button" class="btn btn-outline-dark" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.webrtc.ecl.ntt.com/skyway-4.4.1.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMAbi4gCdn9snloQxsNG0C4C2LSv_kg38&libraries=&v=weekly" async></script>
+</body>
+</html>
